@@ -1,0 +1,26 @@
+[workspace]
+resolver = "2"
+members = ["crates/znp", "crates/zcl", "crates/devices", "crates/bridge", "tools/znp-tap"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license-file = "LICENSE"
+
+[workspace.dependencies]
+bytes = "1"
+thiserror = "2"
+anyhow = "1"
+tokio = { version = "1", default-features = false, features = ["rt", "net", "io-util", "time", "sync", "macros"] }
+tokio-util = { version = "0.7", features = ["codec"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+
+# Pi Zero (ARMv6, 512 MB RAM): small binary, no unwinding tables.
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
