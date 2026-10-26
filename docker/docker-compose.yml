@@ -1,0 +1,23 @@
+# Reference Zigbee2MQTT + Mosquitto for debugging and comparing with z2m-rs.
+# Run on a PC in the same LAN as the SLZB-06: `docker compose up`.
+# Z2M talks to the coordinator through znp-tap (on the host), which records every ZNP frame.
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+  zigbee2mqtt:
+    image: koenkk/zigbee2mqtt:latest
+    depends_on: [mosquitto]
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Europe/Warsaw
+      - DEBUG=zigbee-herdsman*
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./z2m/data:/app/data

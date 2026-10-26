@@ -1,0 +1,10 @@
+[package]
+name = "znp"
+description = "Z-Stack ZNP (MT API) framing and transport"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+bytes.workspace = true
+thiserror.workspace = true
+tokio-util.workspace = true

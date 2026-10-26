@@ -1,0 +1,4 @@
+/target
+*.log
+docker/z2m/data/
+docker/mosquitto/data/

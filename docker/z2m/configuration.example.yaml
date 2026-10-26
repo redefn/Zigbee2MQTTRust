@@ -1,0 +1,16 @@
+# Copy to docker/z2m/data/configuration.yaml before the first start.
+homeassistant:
+  enabled: true
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  # Through znp-tap running on the host (`znp-tap --upstream <slzb-ip>:6638`).
+  # Without the tap use tcp://<slzb-ip>:6638 directly.
+  port: tcp://host.docker.internal:6638
+  adapter: zstack
+frontend:
+  enabled: true
+  port: 8080
+advanced:
+  log_level: debug

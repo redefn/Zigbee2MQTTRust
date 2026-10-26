@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace -- -D warnings
+      - run: cargo test --workspace
+
+  pi-zero:
+    # Raspberry Pi Zero / Zero W are ARMv6; armv7 builds die with "Illegal instruction".
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: arm-unknown-linux-musleabihf
+      - run: cargo install cross --locked
+      - run: cross build --release --target arm-unknown-linux-musleabihf --workspace
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pi-zero-armv6
+          path: |
+            target/arm-unknown-linux-musleabihf/release/z2m-rs
+            target/arm-unknown-linux-musleabihf/release/znp-tap
