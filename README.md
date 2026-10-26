@@ -1,23 +1,23 @@
 # Zigbee2MQTTRust
 
-Lekki zamiennik [Zigbee2MQTT](https://www.zigbee2mqtt.io/) w Rust, przeznaczony na Raspberry Pi Zero (ARMv6, 512 MB RAM),
-dla koordynatora SMLIGHT SLZB-06 (CC2652P, Z-Stack ZNP, TCP 6638 lub USB). Cel: zgodność z API MQTT Zigbee2MQTT,
-żeby Home Assistant nie zauważył podmiany.
+A lightweight [Zigbee2MQTT](https://www.zigbee2mqtt.io/) replacement written in Rust, built for the Raspberry Pi Zero
+(ARMv6, 512 MB RAM) and the SMLIGHT SLZB-06 coordinator (CC2652P, Z-Stack ZNP, TCP port 6638 or USB). Goal: stay
+compatible with the Zigbee2MQTT MQTT API so Home Assistant does not notice the swap.
 
-Status: faza 0 (szkielet). Pierwsze docelowe urządzenie to dwukanałowy ściemniacz Tuya.
+Status: phase 0 (scaffold). The first target device is a Tuya two-channel dimmer.
 
-## Struktura
+## Layout
 
-| Ścieżka | Zawartość |
+| Path | Contents |
 | --- | --- |
-| `crates/znp` | ramki Z-Stack MT (codec `0xFE ... FCS`), później transport i korelacja SREQ/SRSP |
-| `crates/zcl` | ramki i klastry ZCL, ZDO (faza 2) |
-| `crates/devices` | definicje urządzeń i konwertery (faza 2) |
-| `crates/bridge` | plik binarny `z2m-rs`, API MQTT zgodne z Z2M (faza 3) |
-| `tools/znp-tap` | proxy TCP, które nagrywa ramki ZNP między Z2M a koordynatorem |
-| `docker/` | referencyjny Zigbee2MQTT + Mosquitto do debugowania i porównań |
+| `crates/znp` | Z-Stack MT frames (`0xFE ... FCS` codec); transport and SREQ/SRSP correlation to follow |
+| `crates/zcl` | ZCL frames and clusters, ZDO (phase 2) |
+| `crates/devices` | device definitions and converters (phase 2) |
+| `crates/bridge` | the `z2m-rs` binary, Z2M-compatible MQTT API (phase 3) |
+| `tools/znp-tap` | TCP proxy that records ZNP frames between Z2M and the coordinator |
+| `docker/` | reference Zigbee2MQTT + Mosquitto for debugging and comparison |
 
-## Budowanie dla Pi Zero
+## Building for the Pi Zero
 
 ```sh
 cargo install cross --locked
@@ -25,24 +25,24 @@ cross build --release --target arm-unknown-linux-musleabihf --workspace
 scp target/arm-unknown-linux-musleabihf/release/z2m-rs pi@raspberrypi.local:
 ```
 
-Pi Zero i Zero W to ARMv6: target `armv7-*` da błąd „Illegal instruction”. Dla Pi Zero 2 W z 64-bitowym systemem
-użyj `aarch64-unknown-linux-musl`. CI buduje plik ARMv6 przy każdym PR (artefakt `pi-zero-armv6`).
+The Pi Zero and Zero W are ARMv6: an `armv7-*` target fails with "Illegal instruction". For a Pi Zero 2 W running a
+64-bit OS use `aarch64-unknown-linux-musl`. CI builds the ARMv6 binary on every PR (artifact `pi-zero-armv6`).
 
-## Referencyjny Zigbee2MQTT i nagrywanie ramek
+## Reference Zigbee2MQTT and frame capture
 
-SLZB-06 po TCP zwykle przyjmuje tylko jednego klienta naraz, więc Z2M i `z2m-rs` uruchamiaj naprzemiennie.
-Przed każdym przełączeniem zrób kopię `database.db` i backup koordynatora.
+The SLZB-06 usually accepts only one TCP client at a time, so run Z2M and `z2m-rs` alternately.
+Back up `database.db` and the coordinator before every switch.
 
 ```sh
-cargo run -p znp-tap -- --upstream <ip-slzb>:6638 --out capture.log
+cargo run -p znp-tap -- --upstream <slzb-ip>:6638 --out capture.log
 mkdir -p docker/z2m/data && cp docker/z2m/configuration.example.yaml docker/z2m/data/configuration.yaml
 docker compose -f docker/docker-compose.yml up
 ```
 
-Frontend Z2M: http://localhost:8080. Każda ramka ZNP trafia do `capture.log` z kierunkiem i czasem.
-Nagrania staną się testami odtwarzanymi przez fałszywy transport.
+Z2M frontend: http://localhost:8080. Every ZNP frame lands in `capture.log` with its direction and timestamp.
+Captures will become tests replayed through a fake transport.
 
-## Testy
+## Tests
 
 ```sh
 cargo test --workspace
